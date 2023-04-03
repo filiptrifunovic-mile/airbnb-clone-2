@@ -12,9 +12,12 @@ import Input from "../inputs/Input";
 import toast from "react-hot-toast";
 import Button from "../Button";
 import useLoginModal from "@/app/hooks/useLoginModal";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const LoginModal = () => {
   const registerModal = useRegisterModal();
+  const router = useRouter();
   const loginModal = useLoginModal();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +27,6 @@ const LoginModal = () => {
     formState: { errors },
   } = useForm<FieldValues>({
     defaultValues: {
-      name: "",
       email: "",
       password: "",
     },
@@ -33,20 +35,22 @@ const LoginModal = () => {
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
 
-    axios
-      .post("/api/register", data)
-      .then(() => {
-        registerModal.onClose();
-      })
-      .catch((err) => toast.error("Something went wrong"))
-      .finally(() => {
-        setIsLoading(false);
-      });
+    signIn("credentials", { ...data, redirect: false }).then((callback) => {
+      setIsLoading(false);
+      if (callback?.ok) {
+        toast.success("Logged in");
+        router.refresh();
+        loginModal.onClose();
+      }
+      if (callback?.error) {
+        toast.error(callback.error);
+      }
+    });
   };
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
-      <Heading title="Welcome to Airbnb" subtitle="Create an account" center />
+      <Heading title="Welcome back" subtitle="Log in to your account" center />
       <Input
         id="email"
         label="Email"
@@ -55,14 +59,7 @@ const LoginModal = () => {
         errors={errors}
         required
       />
-      <Input
-        id="name"
-        label="Name"
-        disabled={isLoading}
-        register={register}
-        errors={errors}
-        required
-      />
+
       <Input
         id="password"
         type="password"
@@ -108,7 +105,7 @@ const LoginModal = () => {
     <Modal
       disabled={isLoading}
       isOpen={loginModal.isOpen}
-      title="Register"
+      title="Login"
       actionLabel="Continue"
       onClose={loginModal.onClose}
       onSubmit={handleSubmit(onSubmit)}
