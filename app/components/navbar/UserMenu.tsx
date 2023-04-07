@@ -50,6 +50,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
           <div className="hidden md:block">
             <Avatar src={currentUser?.image} />
           </div>
+          {currentUser ? (
+            <p className="hidden md:block">Hello, {currentUser?.name}</p>
+          ) : null}
         </div>
       </div>
       {isOpen && (
