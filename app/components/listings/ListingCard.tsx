@@ -1,18 +1,20 @@
 "use client";
 
-import useCountries from "@/app/hooks/useCountries";
-import { SafeListing, SafeUser } from "@/app/types";
-import { Listing, Reservation } from "@prisma/client";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from "date-fns";
-import Image from "next/image";
-import HardButton from "../HardButton";
+
+import useCountries from "@/app/hooks/useCountries";
+import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
+
+import HeartButton from "../HardButton";
 import Button from "../Button";
+import ClientOnly from "../ClientOnly";
 
 interface ListingCardProps {
   data: SafeListing;
-  reservation?: Reservation;
+  reservation?: SafeReservation;
   onAction?: (id: string) => void;
   disabled?: boolean;
   actionLabel?: string;
@@ -22,15 +24,14 @@ interface ListingCardProps {
 
 const ListingCard: React.FC<ListingCardProps> = ({
   data,
-  actionId = "",
-  actionLabel,
-  currentUser,
-  disabled,
-  onAction,
   reservation,
+  onAction,
+  disabled,
+  actionLabel,
+  actionId = "",
+  currentUser,
 }) => {
   const router = useRouter();
-
   const { getByValue } = useCountries();
 
   const location = getByValue(data.locationValue);
@@ -38,7 +39,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const handleCancel = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (disabled) return;
+
+      if (disabled) {
+        return;
+      }
 
       onAction?.(actionId);
     },
@@ -54,7 +58,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
   }, [reservation, data.price]);
 
   const reservationDate = useMemo(() => {
-    if (!reservation) return null;
+    if (!reservation) {
+      return null;
+    }
+
     const start = new Date(reservation.startDate);
     const end = new Date(reservation.endDate);
 
@@ -64,32 +71,38 @@ const ListingCard: React.FC<ListingCardProps> = ({
   return (
     <div
       onClick={() => router.push(`/listings/${data.id}`)}
-      className="
-      col-span-1
-      cursor-pointer
-      group
-    "
+      className="col-span-1 cursor-pointer group"
     >
       <div className="flex flex-col gap-2 w-full">
         <div
           className="
-          aspect-square w-full relative overflow-hidden rounded-xl
-        "
+            aspect-square 
+            w-full 
+            relative 
+            overflow-hidden 
+            rounded-xl
+          "
         >
           <Image
             fill
-            alt="Listing"
-            src={data.imageSrc}
             className="
-              object-cover
-              h-full
-              w-full
-              group-hover:scale-110
+              object-cover 
+              h-full 
+              w-full 
+              group-hover:scale-110 
               transition
             "
+            src={data.imageSrc}
+            alt="Listing"
           />
-          <div className="absolute top-3 right-3">
-            <HardButton listingId={data.id} currentUser={currentUser} />
+          <div
+            className="
+            absolute
+            top-3
+            right-3
+          "
+          >
+            <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
         </div>
         <div className="font-semibold text-lg">
@@ -99,11 +112,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
           {reservationDate || data.category}
         </div>
         <div className="flex flex-row items-center gap-1">
-          <div className="font-semibold">€ {price}</div>
+          <div className="font-semibold">$ {price}</div>
           {!reservation && <div className="font-light">night</div>}
         </div>
         {onAction && actionLabel && (
-          <Button disabled small label={actionLabel} onClick={handleCancel} />
+          <Button
+            disabled={disabled}
+            small
+            label={actionLabel}
+            onClick={handleCancel}
+          />
         )}
       </div>
     </div>

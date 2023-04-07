@@ -3,6 +3,7 @@ import ClientOnly from "../components/ClientOnly";
 
 import getCurrentUser from "../actions/getCurrentUser";
 import getReservations from "../actions/getReservation";
+import TripsClient from "./TripsClient";
 
 const TripsPage = async () => {
   const currentUser = await getCurrentUser();
@@ -15,9 +16,9 @@ const TripsPage = async () => {
     );
   }
 
-  const reservation = await getReservations({ userId: currentUser.id });
+  const reservations = await getReservations({ userId: currentUser.id });
 
-  if (reservation.length === 0) {
+  if (reservations.length === 0) {
     return (
       <ClientOnly>
         <EmptyState
@@ -30,7 +31,9 @@ const TripsPage = async () => {
 
   return (
     <ClientOnly>
-      <TripsClient reservation={reservation} currentUser={currentUser} />
+      <TripsClient reservations={reservations} currentUser={currentUser} />
     </ClientOnly>
   );
 };
+
+export default TripsPage;
